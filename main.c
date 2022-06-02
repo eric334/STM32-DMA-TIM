@@ -89,60 +89,60 @@ void Init_USARTx(int x) {
 }
 
 int main(void) {
-		System_Clock_Init();
-	
-		Init_USARTx(2);
-	
-		printf("START\n");
-	
-    led_init();
-		
-	
-		uint8_t SlaveAddress = 0x48 << 1; //0b1001000
-		uint8_t Data_Receive;
-		uint8_t Data_Send = 0;
-	
-		
-		while(1) {
-			// First, send a command to the sensor for reading the temperature
-			I2C_SendData(I2C1, SlaveAddress, &Data_Send, 1); // send one 0 byte
-		
-			// Next, get the measurement
-			I2C_ReceiveData(I2C1, SlaveAddress, &Data_Receive, 1); // read 1 byte
-		
-			int temp = Data_Receive & 0x7F;
-			if (Data_Receive >> 7 == 1) {
-				temp = temp * -1;
-			}
-			
-			if (temp < 37) {
-				break;
-			}
-			
-			// Some delay
-			for(int i = 0; i < 100000; ++i); 
+	System_Clock_Init();
+
+	Init_USARTx(2);
+
+	printf("START\n");
+
+	led_init();
+
+
+	uint8_t SlaveAddress = 0x48 << 1; //0b1001000
+	uint8_t Data_Receive;
+	uint8_t Data_Send = 0;
+
+
+	while(1) {
+		// First, send a command to the sensor for reading the temperature
+		I2C_SendData(I2C1, SlaveAddress, &Data_Send, 1); // send one 0 byte
+
+		// Next, get the measurement
+		I2C_ReceiveData(I2C1, SlaveAddress, &Data_Receive, 1); // read 1 byte
+
+		int temp = Data_Receive & 0x7F;
+		if (Data_Receive >> 7 == 1) {
+			temp = temp * -1;
 		}
-		
-	
-		//animation_arrow_up(&Green);
-	
-		led_set_color_all(&Off);
-	
-		led_update();
-		
-		while (1) {
-			char rxByte;
-			scanf("%c", &rxByte);
-			if (tolower(rxByte) == 'u') {
-				init_colors();
-				//printf("UP\n");
-				animation_arrow_up(&Green);
-			} else if (tolower(rxByte) == 'd') {
-				init_colors();
-				//printf("DOWN\n");
-				animation_arrow_down(&Red);
-			}
+
+		if (temp < 37) {
+			break;
 		}
+
+		// Some delay
+		for(int i = 0; i < 100000; ++i); 
+	}
+
+
+	//animation_arrow_up(&Green);
+
+	led_set_color_all(&Off);
+
+	led_update();
+
+	while (1) {
+		char rxByte;
+		scanf("%c", &rxByte);
+		if (tolower(rxByte) == 'u') {
+			init_colors();
+			//printf("UP\n");
+			animation_arrow_up(&Green);
+		} else if (tolower(rxByte) == 'd') {
+			init_colors();
+			//printf("DOWN\n");
+			animation_arrow_down(&Red);
+		}
+	}
 	
 }
 
@@ -372,88 +372,88 @@ void DMA1_Channel5_IRQHandler(void) {
 }
 
 void led_init(void) {
-		//printf("led_init\n");
-		// using gpioa pa5, tim2ch1, dma1ch5
-	
-		// RCC
+	//printf("led_init\n");
+	// using gpioa pa5, tim2ch1, dma1ch5
 
-		RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; // enable gpioa clock
-		RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN; // enable tim 2
-		RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN; // enable dma clock
-	
-		// GPIO
+	// RCC
 
-		GPIOA->AFR[0] &= ~GPIO_AFRL_AFSEL5; // clear AFRL5
-		GPIOA->AFR[0] |= GPIO_AFRL_AFSEL5_0; // set AFRL5 to af1
-		GPIOA->MODER &= ~GPIO_MODER_MODE5; // clear mode
-		GPIOA->MODER |= GPIO_MODER_MODE5_1; // set to alt function
-		GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD5; // set to no pullup no pulldown
-		GPIOA->OTYPER &= ~GPIO_OTYPER_OT5; // set output type to pushpull
-		GPIOA->OSPEEDR &= ~GPIO_OSPEEDER_OSPEEDR5; // set to low
+	RCC->AHB2ENR |= RCC_AHB2ENR_GPIOAEN; // enable gpioa clock
+	RCC->APB1ENR1 |= RCC_APB1ENR1_TIM2EN; // enable tim 2
+	RCC->AHB1ENR |= RCC_AHB1ENR_DMA1EN; // enable dma clock
 
-		// DMA
+	// GPIO
 
-		DMA1_Channel5->CCR &= ~DMA_CCR_EN; // disable channel	
-	
-		DMA1_CSELR->CSELR &= ~DMA_CSELR_C5S; // clear DMA 5 selection
-		DMA1_CSELR->CSELR |= ( 1 << 18 ) & DMA_CSELR_C5S; // set DMA 5 to tim2ch1
-	
-		DMA1_Channel5->CCR |= DMA_CCR_DIR; // set to read from memory
-		
-		DMA1_Channel5->CCR |= DMA_CCR_PL; // set priority to very high
-		
-		//DMA1_Channel5->CCR |= DMA_CCR_CIRC; //  circular mode
-		
-		//DMA1_Channel5->CCR |= DMA_CCR_PINC; // peripheral increment
-		
-		DMA1_Channel5->CCR |= DMA_CCR_MINC; // enable mecmory increment
-		
-		//DMA1_Channel5->CCR &= ~DMA_CCR_PSIZE; // clear peripheral size
-		//DMA1_Channel5->CCR &= ~DMA_CCR_MSIZE; // clear memory size
+	GPIOA->AFR[0] &= ~GPIO_AFRL_AFSEL5; // clear AFRL5
+	GPIOA->AFR[0] |= GPIO_AFRL_AFSEL5_0; // set AFRL5 to af1
+	GPIOA->MODER &= ~GPIO_MODER_MODE5; // clear mode
+	GPIOA->MODER |= GPIO_MODER_MODE5_1; // set to alt function
+	GPIOA->PUPDR &= ~GPIO_PUPDR_PUPD5; // set to no pullup no pulldown
+	GPIOA->OTYPER &= ~GPIO_OTYPER_OT5; // set output type to pushpull
+	GPIOA->OSPEEDR &= ~GPIO_OSPEEDER_OSPEEDR5; // set to low
 
-		DMA1_Channel5->CPAR &= ~DMA_CPAR_PA; // clear peripheral address
-		DMA1_Channel5->CPAR |= (uint32_t)&TIM2->CCR1; // set peripheral address to tim2
+	// DMA
 
-		NVIC_EnableIRQ(DMA1_Channel5_IRQn); // enable interrupt
-		NVIC_SetPriority(DMA1_Channel5_IRQn, 0); // set priority
-	
-		// TIM
-		
-		TIM2->CR1 &= ~TIM_CR1_CEN; // disable counter
-		TIM2->CR1 &= ~TIM_CR1_DIR; // set to upcounter
-		TIM2->ARR = ARR_VAL; // set ARR
-		TIM2->PSC = PSC_VAL; // set prescaler
-		
-		TIM2->CCMR1 |= (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2); // output compare to PWM mode 1
-		
-		TIM2->DIER |= TIM_DIER_CC1DE; // enable DMA
-	
-		TIM2->CR1 &= ~TIM_CR1_CKD; // disable clock division
-		//TIM2->CR2 &= ~TIM_CR2_MMS; // set UG to trigger output
-		TIM2->CR1 |= TIM_CR1_ARPE; // auto reload preload enable
-		
-		TIM2->CCER &= ~TIM_CCER_CC1P; // enable active high output polarity
-		TIM2->CCER |= TIM_CCER_CC1E; // enable capture compare
-		
-		TIM2->CCR1 = 0; // clear capture compare
-		//TIM2->CCR1 |= 4; // set capture compare to 4
-		
-		//TIM2->CCMR1 &= ~TIM_CCMR1_OC1FE; // disable fast output
-		//TIM2->CCMR1 &= ~TIM_CCMR1_OC1M; // clear output compare
-		
-		//TIM2->DIER |= TIM_DIER_UDE; // update DMA enable
-		//TIM2->DIER |= TIM_DIER_TDE; // trigger request enable
-		
-		//TIM2->DCR &= ~TIM_DCR_DBA; // clear address offset 
-		//TIM2->DCR |= 0x34 >> 2; // set offset to ccr1
-		//printf("address: %d\n", (uint32_t)&TIM2->CCR1 - (uint32_t)TIM2_BASE);
-		//TIM2->DCR |= TIM_DCR_DBL_1; // DMA burst for 3 transfers
-		
-		//TIM2->EGR |= TIM_EGR_UG; // update generation
-		
-		// FOR DEGUB
-		//NVIC_EnableIRQ(TIM2_IRQn); // enable interrupt
-		//NVIC_SetPriority(TIM2_IRQn, 0); // set priority
+	DMA1_Channel5->CCR &= ~DMA_CCR_EN; // disable channel	
+
+	DMA1_CSELR->CSELR &= ~DMA_CSELR_C5S; // clear DMA 5 selection
+	DMA1_CSELR->CSELR |= ( 1 << 18 ) & DMA_CSELR_C5S; // set DMA 5 to tim2ch1
+
+	DMA1_Channel5->CCR |= DMA_CCR_DIR; // set to read from memory
+
+	DMA1_Channel5->CCR |= DMA_CCR_PL; // set priority to very high
+
+	//DMA1_Channel5->CCR |= DMA_CCR_CIRC; //  circular mode
+
+	//DMA1_Channel5->CCR |= DMA_CCR_PINC; // peripheral increment
+
+	DMA1_Channel5->CCR |= DMA_CCR_MINC; // enable mecmory increment
+
+	//DMA1_Channel5->CCR &= ~DMA_CCR_PSIZE; // clear peripheral size
+	//DMA1_Channel5->CCR &= ~DMA_CCR_MSIZE; // clear memory size
+
+	DMA1_Channel5->CPAR &= ~DMA_CPAR_PA; // clear peripheral address
+	DMA1_Channel5->CPAR |= (uint32_t)&TIM2->CCR1; // set peripheral address to tim2
+
+	NVIC_EnableIRQ(DMA1_Channel5_IRQn); // enable interrupt
+	NVIC_SetPriority(DMA1_Channel5_IRQn, 0); // set priority
+
+	// TIM
+
+	TIM2->CR1 &= ~TIM_CR1_CEN; // disable counter
+	TIM2->CR1 &= ~TIM_CR1_DIR; // set to upcounter
+	TIM2->ARR = ARR_VAL; // set ARR
+	TIM2->PSC = PSC_VAL; // set prescaler
+
+	TIM2->CCMR1 |= (TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2); // output compare to PWM mode 1
+
+	TIM2->DIER |= TIM_DIER_CC1DE; // enable DMA
+
+	TIM2->CR1 &= ~TIM_CR1_CKD; // disable clock division
+	//TIM2->CR2 &= ~TIM_CR2_MMS; // set UG to trigger output
+	TIM2->CR1 |= TIM_CR1_ARPE; // auto reload preload enable
+
+	TIM2->CCER &= ~TIM_CCER_CC1P; // enable active high output polarity
+	TIM2->CCER |= TIM_CCER_CC1E; // enable capture compare
+
+	TIM2->CCR1 = 0; // clear capture compare
+	//TIM2->CCR1 |= 4; // set capture compare to 4
+
+	//TIM2->CCMR1 &= ~TIM_CCMR1_OC1FE; // disable fast output
+	//TIM2->CCMR1 &= ~TIM_CCMR1_OC1M; // clear output compare
+
+	//TIM2->DIER |= TIM_DIER_UDE; // update DMA enable
+	//TIM2->DIER |= TIM_DIER_TDE; // trigger request enable
+
+	//TIM2->DCR &= ~TIM_DCR_DBA; // clear address offset 
+	//TIM2->DCR |= 0x34 >> 2; // set offset to ccr1
+	//printf("address: %d\n", (uint32_t)&TIM2->CCR1 - (uint32_t)TIM2_BASE);
+	//TIM2->DCR |= TIM_DCR_DBL_1; // DMA burst for 3 transfers
+
+	//TIM2->EGR |= TIM_EGR_UG; // update generation
+
+	// FOR DEGUB
+	//NVIC_EnableIRQ(TIM2_IRQn); // enable interrupt
+	//NVIC_SetPriority(TIM2_IRQn, 0); // set priority
 }
 
 
